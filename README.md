@@ -1,0 +1,3 @@
+- This is a simple Todo App project that allows CRUD operations of Todo items.
+- You can categorize the Todo item in two categories: Personal and Work 
+- You can view the deployed web app here: https://todoapphanzala.azurewebsites.net
