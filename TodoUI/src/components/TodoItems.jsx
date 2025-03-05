@@ -1,75 +1,70 @@
-// components/TodoItems.jsx
-import React, { useEffect, useState } from 'react';
-import { List, ListItem, ListItemText, Checkbox, IconButton } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { updateTodo, deleteTodo } from '../api/todoService';
-import EditTodoModal from './EditTodoModal';
+import React, { useEffect, useState } from "react";
+import { List, ListItem, ListItemText, Checkbox, IconButton } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { updateTodo, deleteTodo } from "../api/todoService";
+import EditTodoModal from "./EditTodoModal";
 
-function TodoItems({ todos, selectedCategory, updateTodos, categories }) {
+function TodoItems({ todos, selectedCategory, updateTodos, categories, setSnackbar }) {
   const [filteredTodos, setFilteredTodos] = useState([]);
   const [editingTodo, setEditingTodo] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  // Filter todos whenever todos or selectedCategory changes
   useEffect(() => {
+    let sortedTodos = todos;
+
     if (selectedCategory && selectedCategory.id) {
-      setFilteredTodos(
-        todos.filter(todo => todo.categoryId === selectedCategory.id)
-      );
-    } else {
-      // if no category is selected, show all todos
-      setFilteredTodos(todos);
+      sortedTodos = todos.filter((todo) => todo.categoryId === selectedCategory.id);
     }
+
+    // Sort by priority (lower numbers first)
+    sortedTodos = sortedTodos.sort((a, b) => a.priority - b.priority);
+
+    setFilteredTodos(sortedTodos);
   }, [todos, selectedCategory]);
 
   const completeTodo = async (event, todoId) => {
     const updatedValue = event.target.checked;
-    const updatedTodo = todos.find(todo => todo.id === todoId);
+    const updatedTodo = todos.find((todo) => todo.id === todoId);
     if (!updatedTodo) return;
     updatedTodo.isComplete = updatedValue;
 
-    // Update state with a new array so React detects the change
-    const newTodos = todos.map(todo => todo.id === todoId ? { ...updatedTodo } : todo);
+    const newTodos = todos.map((todo) => (todo.id === todoId ? { ...updatedTodo } : todo));
     updateTodos(newTodos);
-    
+
     try {
       await updateTodo(todoId, updatedTodo);
+      setSnackbar({ open: true, message: "Todo updated successfully!", severity: "success" });
     } catch (error) {
-      console.error(error);
+      setSnackbar({ open: true, message: "Failed to update todo!", severity: "error" });
     }
   };
 
   const handleDelete = async (todoId) => {
     try {
       await deleteTodo(todoId);
-      // Update the todos list after deletion
-      updateTodos(todos.filter(todo => todo.id !== todoId));
+      updateTodos(todos.filter((todo) => todo.id !== todoId));
+      setSnackbar({ open: true, message: "Todo deleted!", severity: "success" });
     } catch (error) {
-      console.error(error);
+      setSnackbar({ open: true, message: "Failed to delete todo!", severity: "error" });
     }
   };
 
   const handleEditClick = (todoId) => {
-    const todoToEdit = todos.find(todo => todo.id === todoId);
+    const todoToEdit = todos.find((todo) => todo.id === todoId);
     setEditingTodo(todoToEdit);
     setEditModalOpen(true);
   };
 
   const handleEditSave = async (editedTodo) => {
-    // Update todo on the server
     try {
       await updateTodo(editedTodo.id, editedTodo);
-      // Update local state: map through todos and replace the edited one
-      const newTodos = todos.map(todo => todo.id === editedTodo.id ? editedTodo : todo);
+      const newTodos = todos.map((todo) => (todo.id === editedTodo.id ? editedTodo : todo));
       updateTodos(newTodos);
+      setSnackbar({ open: true, message: "Todo edited successfully!", severity: "success" });
     } catch (error) {
-      console.error(error);
+      setSnackbar({ open: true, message: "Failed to edit todo!", severity: "error" });
     }
-    setEditModalOpen(false);
-  };
-
-  const handleEditCancel = () => {
     setEditModalOpen(false);
   };
 
@@ -77,24 +72,17 @@ function TodoItems({ todos, selectedCategory, updateTodos, categories }) {
     <>
       <List>
         {filteredTodos.map((todo) => (
-          <ListItem 
-            key={todo.id} 
-            divider
-            secondaryAction={
-              <>
-                <IconButton edge="end" onClick={() => handleEditClick(todo.id)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton edge="end" onClick={() => handleDelete(todo.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </>
-            }
-          >
-            <Checkbox 
-              checked={todo.isComplete} 
-              onChange={(e) => completeTodo(e, todo.id)}
-            />
+          <ListItem key={todo.id} divider secondaryAction={
+            <>
+              <IconButton edge="end" onClick={() => handleEditClick(todo.id)}>
+                <EditIcon />
+              </IconButton>
+              <IconButton edge="end" onClick={() => handleDelete(todo.id)}>
+                <DeleteIcon />
+              </IconButton>
+            </>
+          }>
+            <Checkbox checked={todo.isComplete} onChange={(e) => completeTodo(e, todo.id)} />
             <ListItemText primary={todo.description} />
           </ListItem>
         ))}
@@ -104,7 +92,7 @@ function TodoItems({ todos, selectedCategory, updateTodos, categories }) {
         open={editModalOpen} 
         todo={editingTodo} 
         categories={categories || []} 
-        onClose={handleEditCancel} 
+        onClose={() => setEditModalOpen(false)} 
         onSave={handleEditSave} 
       />
     </>

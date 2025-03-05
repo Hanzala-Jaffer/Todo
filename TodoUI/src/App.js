@@ -83,22 +83,22 @@ function App() {
           selectedCategory={selectedCategory}
           categories={categories}
         />
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            transition: (theme) =>
-              theme.transitions.create('margin', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-              }),
-            ml: openSidebar ? `${drawerWidth}px` : 0,
-          }}
-        >
-          <Toolbar />
-          <Content categories={categories} selectedCategory={selectedCategory} />
-        </Box>
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              p: 3,
+              transition: (theme) =>
+                theme.transitions.create('margin', {
+                  easing: theme.transitions.easing.sharp,
+                  duration: theme.transitions.duration.leavingScreen,
+                }),
+              ml: openSidebar ? `${drawerWidth}px` : 0,
+            }}
+          >
+            <Toolbar />
+            <Content categories={categories} selectedCategory={selectedCategory} />
+          </Box>
       </Box>
 
       {/* Footer */}

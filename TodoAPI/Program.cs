@@ -1,6 +1,10 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using TodoAPI;
+using TodoAPI.DAL.Implementations;
+using TodoAPI.DAL.Interfaces;
+using TodoAPI.Services.Implementations;
+using TodoAPI.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +14,10 @@ builder.Services.AddSwaggerGen();
 
 // Register controllers
 builder.Services.AddControllers();
+
+// Register Services
+builder.Services.AddScoped<ITodoService, TodoService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Configure Entity Framework Core with SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
