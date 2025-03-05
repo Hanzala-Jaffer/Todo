@@ -48,6 +48,10 @@ artifacts/
 # StyleCop
 StyleCopReport.xml
 
+# Ignore Visual Studio build folders
+bin/
+obj/
+
 # Files built by Visual Studio
 *.pdb
 *.cache

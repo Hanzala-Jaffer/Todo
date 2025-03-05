@@ -1,19 +1,20 @@
-// components/NewTodoItem.jsx
-import React, { useState } from 'react';
-import { TextField, Button, Box } from '@mui/material';
-import { createTodo } from '../api/todoService';
+import React, { useState } from "react";
+import { TextField, Button, Box } from "@mui/material";
+import { createTodo } from "../api/todoService";
 
-function NewTodoItem({ onTodoCreated, selectedCategory }) {
-  const [todoText, setTodoText] = useState('');
+function NewTodoItem({ onTodoCreated, selectedCategory, setSnackbar }) {
+  const [todoText, setTodoText] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Prepare the new todo object. Adjust properties as needed.
+    if (!todoText.trim()) {
+      setSnackbar({ open: true, message: "Todo description cannot be empty!", severity: "warning" });
+      return;
+    }
+
     const newTodoData = {
       description: todoText,
-      // Use the selected category if available
       categoryId: selectedCategory ? selectedCategory.id : null,
-      // Set default values for other properties, like priority or isComplete
       isComplete: false,
       priority: 1,
       dueDate: new Date(),
@@ -21,12 +22,12 @@ function NewTodoItem({ onTodoCreated, selectedCategory }) {
 
     try {
       const createdTodo = await createTodo(newTodoData);
-      // Call the parent's callback to add the new todo to the list
       onTodoCreated(createdTodo);
+      setTodoText("");
+      setSnackbar({ open: true, message: "Todo added successfully!", severity: "success" });
     } catch (error) {
-      console.error(error);
+      setSnackbar({ open: true, message: error.response?.data?.message || "Failed to add todo!", severity: "error" });
     }
-    setTodoText('');
   };
 
   return (

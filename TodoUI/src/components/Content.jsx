@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Typography } from '@mui/material';
-import NewTodoItem from './NewTodoItem';
-import TodoItems from './TodoItems';
+import React, { useState, useEffect } from "react";
+import { Container, Snackbar, Alert } from "@mui/material";
+import NewTodoItem from "./NewTodoItem";
+import TodoItems from "./TodoItems";
 import { getTodos } from "../api/todoService";
 
 function Content({ categories, selectedCategory }) {
   const [todos, setTodos] = useState([]);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   useEffect(() => {
     const loadTodos = async () => {
@@ -13,15 +14,14 @@ function Content({ categories, selectedCategory }) {
         const data = await getTodos();
         setTodos(data);
       } catch (error) {
-        console.error(error);
+        setSnackbar({ open: true, message: "Failed to fetch todos!", severity: "error" });
       }
     };
     loadTodos();
   }, []);
 
-  // Function to add a new todo to the state
   const handleNewTodo = (newTodo) => {
-    setTodos(prev => [...prev, newTodo]);
+    setTodos((prev) => [...prev, newTodo]);
   };
 
   const updateTodos = (updatedTodos) => {
@@ -30,11 +30,15 @@ function Content({ categories, selectedCategory }) {
 
   return (
     <Container maxWidth="md" sx={{ marginTop: 4 }}>
-      {/* <Typography variant="h4" gutterBottom>
-        Todo App {selectedCategory ? `- ${selectedCategory.name}` : ''}
-      </Typography> */}
-      <NewTodoItem onTodoCreated={handleNewTodo} selectedCategory={selectedCategory} />
-      <TodoItems todos={todos} selectedCategory={selectedCategory} updateTodos={updateTodos} categories={categories}/>
+      <NewTodoItem onTodoCreated={handleNewTodo} selectedCategory={selectedCategory} setSnackbar={setSnackbar} />
+      <TodoItems todos={todos} selectedCategory={selectedCategory} updateTodos={updateTodos} categories={categories} setSnackbar={setSnackbar} />
+
+      {/* Snackbar */}
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

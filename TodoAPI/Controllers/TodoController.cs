@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TodoAPI.Models;
+using TodoAPI.Services.Interfaces;
 
 namespace TodoAPI.Controllers
 {
@@ -12,86 +14,70 @@ namespace TodoAPI.Controllers
     public class TodoController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ITodoService _todoService;
 
-        public TodoController(AppDbContext context)
+        public TodoController(ITodoService todoService)
         {
-            _context = context;
+            _todoService = todoService;
         }
 
         // GET: api/todo
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> GetAllTodos()
+        public async Task<ActionResult> GetAllTodos()
         {
-            var res = await _context.TodoItems.OrderBy(x => x.Priority).ToListAsync();
-            return res;
+            var res = await _todoService.GetAllTodoItemsAsync();
+            if(!res.IsSuccess)
+            {
+                return StatusCode(500, res);
+            }
+            return Ok(res.Data);
         }
 
         // POST: api/todo
         [HttpPost]
-        public async Task<ActionResult<TodoItem>> CreateTodo(TodoItem todoItem)
+        public async Task<ActionResult> CreateTodo(TodoItem todoItem)
         {
-            _context.TodoItems.Add(todoItem);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetAllTodos), new { id = todoItem.Id }, todoItem);
+            var res = await _todoService.AddTodoItemAsync(todoItem);
+            if(!res.IsSuccess)
+            {
+                return StatusCode(500, res);
+            }
+            return CreatedAtAction(nameof(GetAllTodos), new { id = todoItem.Id }, res.Data);
         }
 
         // PUT: api/todo/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTodo(int id, TodoItem updatedTodo)
         {
-            if (id != updatedTodo.Id)
+            var res = await _todoService.UpdateTodoItemAsync(updatedTodo);
+            if(!res.IsSuccess)
             {
-                return BadRequest("ID mismatch");
+                return StatusCode(500, res);
             }
-
-            _context.Entry(updatedTodo).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TodoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(res.Data);
         }
 
         // DELETE: api/todo/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodo(int id)
         {
-            var todoItem = await _context.TodoItems.FindAsync(id);
-            if (todoItem == null)
+            var res = await _todoService.DeleteTodoItemAsync(id);
+            if(!res.IsSuccess)
             {
-                return NotFound();
+                return StatusCode(500, res);
             }
-
-            _context.TodoItems.Remove(todoItem);
-            await _context.SaveChangesAsync();
-
             return NoContent();
         }
         // GET: api/todo/categories
         [HttpGet("categories")]
         public async Task<ActionResult<IEnumerable<Category>>> GetAllCategories()
         {
-            return await _context.Categories.ToListAsync();
-        }
-
-
-        private bool TodoExists(int id)
-        {
-            return _context.TodoItems.Any(e => e.Id == id);
+            var res =  await _todoService.GetCategoriesAsync();
+            if(!res.IsSuccess)
+            {
+                return StatusCode(500, res);
+            }
+            return Ok(res.Data);
         }
     }
 }
